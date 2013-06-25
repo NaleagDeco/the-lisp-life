@@ -31,7 +31,22 @@
 	(live-adj (list-length (remove-if-not #'alivep
 					      (neighbours world row col)))))
     (if (alivep cell)
-	(cond ((or (= live-adj 2) (= live-adj 3)) :ALIVE)
-	      (t :DEAD))		; Death by under/over-population
-	(cond ((= live-adj 3) :ALIVE)	; Birth by reproduction
-	      (t :DEAD)))))
+	(cond ((or (= live-adj 2) (= live-adj 3)) :alive)
+	      (t :dead))		; Death by under/over-population
+	(cond ((= live-adj 3) :alive)	; Birth by reproduction
+	      (t :dead)))))
+
+(defun tick (world)
+  (let ((nworld (make-array (array-dimensions world)))
+	(rows (array-dimension world 0))
+	(cols (array-dimension world 1)))
+    (progn
+      (loop for r below rows do
+	   (loop for c below cols do
+		(setf (aref nworld r c) (tick-cell world r c))))
+      nworld)))
+
+(defun tick-thunk (world)
+  (labels ((thunk-gen (world)
+	     (cons world (lambda () (thunk-gen (tick world))))))
+    (thunk-gen world)))
